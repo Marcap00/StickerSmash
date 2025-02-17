@@ -1,6 +1,8 @@
 import { Text, View, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import { Image } from 'expo-image';
+import ImageViewer from '@/components/ImageViewer';
+import Button from '@/components/Button';
 
 const PlaceholderImage = require('@/assets/images/background-image.png');
 
@@ -12,7 +14,11 @@ export default function Index() {
         Go to About screen
       </Link> */}
       <View style={styles.imageContainer}>
-        <Image source={PlaceholderImage} style={styles.image}></Image>
+        <ImageViewer imageSource={PlaceholderImage} />
+      </View>
+      <View style={styles.footerContainer}>
+        <Button label="Choose a photo" theme="primary" />
+        <Button label="Use this photo" />
       </View>
 
     </View>
@@ -41,5 +47,9 @@ const styles = StyleSheet.create({
     width: 320,
     height: 440,
     borderRadius: 18,
+  },
+  footerContainer: {
+    flex: 1 / 3,
+    alignItems: 'center',
   }
 });
