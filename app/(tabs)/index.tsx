@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 const PlaceholderImage = require('@/assets/images/background-image.png');
 
 export default function Index() {
+
   const pickImageAsync = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
@@ -18,26 +19,42 @@ export default function Index() {
 
     if (!result.canceled) {
       console.log(result);
-      console.log(result.assets[0].uri);
+      {
+        /* The result will be an object like this (on the web):
+          {
+            "assets": [
+              {
+                "fileName": "some-image.png",
+                "height": 720,
+                "mimeType": "image/png",
+                "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABQAA"
+              }
+            ],
+            "canceled": false
+          }
+        */
+      }
       return result.assets[0].uri;
     } else {
       alert("You need to provide a photo");
     }
   }
+
   return (
     <View style={styles.container}>
       {/* <Text style={styles.text}>Home screen</Text>
       <Link href="/about" style={styles.button}>
         Go to About screen
       </Link> */}
+
       <View style={styles.imageContainer}>
         <ImageViewer imageSource={PlaceholderImage} />
       </View>
+
       <View style={styles.footerContainer}>
-        <Button label="Choose a photo" theme="primary" />
+        <Button label="Choose a photo" theme="primary" onPress={pickImageAsync} />
         <Button label="Use this photo" />
       </View>
-
     </View>
   );
 }
