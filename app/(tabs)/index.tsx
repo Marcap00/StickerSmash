@@ -1,8 +1,9 @@
 import { Text, View, StyleSheet } from 'react-native';
 // import { Link } from 'expo-router';
 // import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 
 import ImageViewer from '@/components/ImageViewer';
 import Button from '@/components/Button';
@@ -13,6 +14,7 @@ import { ImageSource } from 'expo-image';
 import EmojiList from '@/components/EmojiList';
 import EmojiSticker from '@/components/EmojiSticker';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { captureRef } from 'react-native-view-shot';
 
 
 const PlaceholderImage = require('@/assets/images/background-image.png');
@@ -22,6 +24,12 @@ export default function Index() {
     const [showAppOptions, setShowAppOptions] = useState<boolean>(false);
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
     const [pickedEmoji, setPickedEmoji] = useState<ImageSource | null>(null);
+    const [status, requestPermission] = MediaLibrary.usePermissions();
+    const imageRef = useRef<View>(null);
+
+    if (status === null) {
+        requestPermission();
+    }
 
     const pickImageAsync = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -30,21 +38,21 @@ export default function Index() {
             mediaTypes: ['images'],
         })
 
-        if (!result.canceled) {
+        {
+            /* The result will be an object like this (on the web):
             {
-                /* The result will be an object like this (on the web):
+                "assets": [
                 {
-                    "assets": [
-                    {
-                        "fileName": "some-image.png",
-                        "height": 720,
-                        "mimeType": "image/png",
-                        "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABQAA"
-                    }],
-                    "canceled": false
-                }
-                */
+                    "fileName": "some-image.png",
+                    "height": 720,
+                    "mimeType": "image/png",
+                    "uri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABQAA"
+                }],
+                "canceled": false
             }
+            */
+        }
+        if (!result.canceled) {
             console.log(result);
             setSelectedImage(result.assets[0].uri);
             setShowAppOptions(true);
@@ -66,14 +74,28 @@ export default function Index() {
     };
 
     const onSaveImageAsync = async () => {
-
+        try {
+            const localUri = await captureRef(imageRef, {
+                height: 440,
+                quality: 1,
+            });
+            await MediaLibrary.saveToLibraryAsync(localUri);
+            if (localUri) {
+                alert("Saved!");
+            }
+        } catch (e) {
+            console.log(e);
+        }
     }
+
 
     return (
         <GestureHandlerRootView style={styles.container}>
             <View style={styles.imageContainer}>
-                <ImageViewer imgSource={PlaceholderImage} selectedImage={selectedImage} />
-                {pickedEmoji && <EmojiSticker imageSize={40} stickerSource={pickedEmoji} />}
+                <View ref={imageRef} collapsable={false}>
+                    <ImageViewer imgSource={PlaceholderImage} selectedImage={selectedImage} />
+                    {pickedEmoji && <EmojiSticker imageSize={40} stickerSource={pickedEmoji} />}
+                </View>
             </View>
 
             {showAppOptions ? (
@@ -90,9 +112,11 @@ export default function Index() {
                     <Button label="Use this photo" onPress={() => setShowAppOptions(true)} />
                 </View>
             )}
+
             <EmojiPicker isVisible={isModalVisible} onClose={onModalClose}>
                 <EmojiList onSelect={setPickedEmoji} onCloseModal={onModalClose} />
             </EmojiPicker>
+
         </GestureHandlerRootView>
     );
 }
